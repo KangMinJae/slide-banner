@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="css/slide-banner.css">
+    <title>Mobile Web - auto slide</title>
+</head>
+<body>
+    <div id="slideBannerArea" class="slide-banner-area">
+        <img name="slideBannerImg">
+    </div>
+</body>
+<script>
+    // SlideBanner Options
+    let opts = {
+      imagesArr: ['slide_1.png', 'slide_2.png', 'slide_3.png', 'slide_4.png'],   // 이미지 배열
+      auto: true,   // slide banner 자동넘김 여부
+      time: 5000,   // slide banner 자동 넘김 시간
+      idx: 0,   // 최초 이미지 index
+      isDotArea: false,  // dot 영역 생성 여부
+    };
+
+    /**
+     *  @public
+     */
+    function init() {
+        _bind();
+        _bindEvent();
+    }
+
+    /**
+     *  @private
+     */
+    function _bind() {
+        _changeImg();
+
+        if (!opts.isDotArea) {
+            let dotWrapper = document.createElement('div');
+            dotWrapper.className = 'dot-wrapper';
+
+            for (let i = 0; i < opts.imagesArr.length; i++) {
+                let dot = document.createElement('span');
+                dot.className = (i === 0) ? 'dot active' : 'dot';
+
+                dot.addEventListener("click", function (e) {
+                    selectIdx(this);
+
+                    e.stopPropagation();
+                });
+
+                dotWrapper.appendChild(dot);
+            }
+            document.getElementById('slideBannerArea').appendChild(dotWrapper);
+
+            opts.isDotArea = true;
+        }
+
+        if (opts.auto) {
+            _changeIdx();
+            setTimeout(_bind, opts.time);
+        }
+    }
+
+    function _bindEvent() {
+        let el = document.getElementById('slideBannerArea');
+
+        _swipeEvt(el, function (swipeType) {
+            if (swipeType === 'left') {
+                _increaseIdx();
+            } else if (swipeType === 'right') {
+                _decreaseIdx();
+            }
+
+            _changeImg();
+            _changeDot();
+        });
+    }
+
+    function _changeIdx() {
+        _changeDot();
+        _increaseIdx();
+    }
+
+    function selectIdx(target) {
+        let arr = Array.prototype.slice.call(document.getElementsByClassName('dot'));
+
+        opts.idx = arr.indexOf(target);
+
+        _changeImg();
+        _changeDot();
+    }
+
+    function _increaseIdx() {
+        if (opts.idx < opts.imagesArr.length - 1) {
+            opts.idx++;
+        } else {
+            opts.idx = 0;
+        }
+    }
+
+    function _decreaseIdx() {
+        if (opts.idx > 0) {
+            opts.idx--;
+        } else {
+            opts.idx = opts.imagesArr.length - 1;
+        }
+    }
+
+    function _changeImg() {
+        document.slideBannerImg.src = 'images/' + opts.imagesArr[opts.idx];
+    }
+
+    function _changeDot() {
+        let evtTarget = document.getElementsByClassName('dot');
+
+        for (let i = 0; i < evtTarget.length; i++) {
+            if (evtTarget[i].classList.contains('active')) {
+                evtTarget[i].classList.remove('active');
+            }
+        }
+        evtTarget[opts.idx].classList.add('active');
+    }
+
+    function _swipeEvt(el, callback) {
+        let swipeTarget = el,
+            swipeType,
+            startX, distX,
+            swipe = callback || function (swipeType) {};
+
+        swipeTarget.addEventListener('mousedown', function (e) {
+            swipeType = 'none';
+            startX = e.pageX;
+
+            e.preventDefault();
+        }, false);
+
+        swipeTarget.addEventListener('mousemove', function (e) {
+            e.preventDefault();
+        }, false);
+
+        swipeTarget.addEventListener('mouseup', function (e) {
+            distX = e.pageX - startX;
+
+            swipeType = (distX < 0) ? 'left' : 'right';
+
+            swipe(swipeType);
+
+            e.preventDefault();
+        }, false);
+    }
+
+    window.onload = init;
+</script>
+</html>
